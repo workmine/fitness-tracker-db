@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Fitness Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS STYLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; transition: all 0.3s ease; }
+        body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        /* Main Container */
+        .dashboard-container {
+            width: 100%; max-width: 750px; height: 500px;
+            background: #f8f9fe; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden; display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar { width: 70px; background: #0f172a; display: flex; flex-direction: column; align-items: center; padding: 25px 0; color: #64748b; z-index: 2; }
+        .sidebar i { margin-bottom: 30px; font-size: 1.2rem; cursor: pointer; position: relative; }
+        .sidebar i:hover { color: #fff; transform: scale(1.1); }
+        .sidebar i.active { color: #3b82f6; }
+        .sidebar i.active::before { content: ''; position: absolute; left: -25px; top: 50%; transform: translateY(-50%); height: 30px; width: 4px; background: #3b82f6; border-radius: 0 4px 4px 0; }
+
+        /* Content Area */
+        .content { flex: 1; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h3 { color: #1e293b; font-weight: 700; }
+        .user-nav { display: flex; gap: 15px; color: #64748b; font-size: 1rem; align-items: center; cursor: pointer; }
+        .user-nav i:hover { color: #3b82f6; }
+
+        /* Top Cards */
+        .cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; transform: translateY(0); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+        .card h4 { font-size: 0.8rem; color: #64748b; margin-bottom: 5px; }
+        .card .val { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
+        
+        .card.blue { background: #e0f2fe; } 
+        .card.blue h4 { color: #0284c7; }
+        .card.blue .val { color: #0369a1; }
+        
+        .card.dark { background: #3b82f6; color: white; }
+        .card.dark h4 { color: rgba(255,255,255,0.8); }
+        .card.dark .val { color: white; }
+
+        /* Bottom Section */
+        .bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; flex: 1; }
+        .chart-box { background: white; border-radius: 15px; padding: 20px; position: relative; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .stats-box { background: white; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; justify-content: space-evenly; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+
+        /* CSS Chart Visual */
+        .chart-visual { 
+            width: 100%; flex: 1; 
+            background: linear-gradient(180deg, rgba(59,130,246,0.15) 0%, rgba(255,255,255,0) 100%); 
+            border-top: 2px solid #3b82f6; 
+            /* This polygon creates the jagged line shape */
+            clip-path: polygon(0 40%, 15% 20%, 30% 60%, 45% 30%, 60% 50%, 75% 20%, 90% 40%, 100% 10%, 100% 100%, 0 100%); 
+            margin-top: auto; 
+            animation: pulseChart 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseChart {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* Progress Bars */
+        .prog-item { margin-bottom: 10px; }
+        .prog-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-bottom: 5px; }
+        .prog-bg { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+        .prog-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 1.5s ease-out; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <i class="fas fa-bolt" id="btn-refresh" title="Update Data" style="color:#f59e0b"></i>
+            <i class="fas fa-chart-pie active" onclick="setActive(this)"></i>
+            <i class="fas fa-dumbbell" onclick="setActive(this)"></i>
+            <i class="fas fa-calendar-alt" onclick="setActive(this)"></i>
+            <i class="fas fa-cog" style="margin-top:auto"></i>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <div>
+                    <h3 id="greeting">Fitness Overview</h3>
+                    <p style="font-size: 0.8rem; color: #94a3b8;" id="date-display">Fetching date...</p>
+                </div>
+                <div class="user-nav">
+                    <i class="far fa-bell"></i>
+                    <img src="https://ui-avatars.com/api/?name=Alex&background=3b82f6&color=fff" style="width:32px; border-radius:50%;">
+                </div>
+            </div>
+
+            <div class="cards-row">
+                <div class="card blue">
+                    <h4>Steps</h4>
+                    <div class="val counter" data-target="{{ steps }}">0</div>
+                </div>
+                <div class="card">
+                    <h4>Calories</h4>
+                    <div class="val counter" data-target="{{ cals }}">0</div>
+                </div>
+                <div class="card">
+                    <h4>Active</h4>
+                    <div class="val"><span class="counter" data-target="{{ active }}">0</span> <span style="font-size:0.8rem">min</span></div>
+                </div>
+                <div class="card dark">
+                    <h4>Sleep</h4>
+                    <div class="val">{{ sleep }}</div>
+                </div>
+            </div>
+
+            <div class="bottom-grid">
+                <div class="chart-box">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h4 style="font-size:0.9rem; color:#1e293b; margin-bottom:5px;">Workout Summary</h4>
+                        <i class="fas fa-ellipsis-h" style="color:#cbd5e1; cursor:pointer;"></i>
+                    </div>
+                    <span style="font-size:0.7rem; color:#64748b;">HIIT Session: 45 min</span>
+                    <div class="chart-visual" id="main-chart"></div>
+                </div>
+                <div class="stats-box">
+                    <div class="prog-item">
+                        <div class="prog-label"><span>Steps Goal</span><span id="label-steps">85%</span></div>
+                        <div class="prog-bg"><div class="prog-fill" id="fill-steps" data-width="85%" style="background:#10b981;"></div></div>
+                    </div>
+                    <div class="prog-item">
+                        <div class="prog-label"><span>Calorie Burn</span><span id="label-cals">65%</span></div>
+                        <div class="prog-bg"><div class="prog-fill" id="fill-cals" data-width="65%" style="background:#ef4444;"></div></div>
+                    </div>
+                    <div class="prog-item">
+                        <div class="prog-label"><span>Exercise Time</span><span id="label-ex">90%</span></div>
+                        <div class="prog-bg"><div class="prog-fill" id="fill-ex" data-width="90%" style="background:#3b82f6;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+        });
+
+        function initDashboard() {
+            setGreeting();
+            updateDate();
+            runAnimations();
+            
+            // Add event listener to the Bolt icon to refresh data
+            document.getElementById('btn-refresh').addEventListener('click', refreshData);
+        }
+
+        // 1. Sidebar Active State Toggler
+        function setActive(element) {
+            const items = document.querySelectorAll('.sidebar i');
+            items.forEach(item => {
+                // Don't remove active from the bolt button or cog if you don't want to
+                if(!item.id && !item.classList.contains('fa-cog')) {
+                   item.classList.remove('active'); 
+                }
+            });
+            element.classList.add('active');
+        }
+
+        // 2. Set Greeting based on time
+        function setGreeting() {
+            const hour = new Date().getHours();
+            const greetingTag = document.getElementById('greeting');
+            let text = 'Good Evening, Alex';
+            if (hour < 12) text = 'Good Morning, Alex';
+            else if (hour < 18) text = 'Good Afternoon, Alex';
+            greetingTag.innerText = text;
+        }
+
+        // 3. Set Date
+        function updateDate() {
+            const dateDisplay = document.getElementById('date-display');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateDisplay.innerText = new Date().toLocaleDateString('en-US', options);
+        }
+
+        // 4. Number Counter Animation
+        function runCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                counter.innerText = '0';
+                const target = +counter.getAttribute('data-target');
+                const increment = target / 50; // Speed of count
+                
+                const updateCount = () => {
+                    const count = +counter.innerText.replace(/,/g, '');
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + increment).toLocaleString();
+                        setTimeout(updateCount, 20);
+                    } else {
+                        counter.innerText = target.toLocaleString();
+                    }
+                };
+                updateCount();
+            });
+        }
+
+        // 5. Progress Bar Animation
+        function runProgressBars() {
+            const bars = document.querySelectorAll('.prog-fill');
+            bars.forEach(bar => {
+                // Reset width to 0 first to allow re-animation
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    const targetWidth = bar.getAttribute('data-width');
+                    bar.style.width = targetWidth;
+                }, 100);
+            });
+        }
+
+        // Master Animation Function
+        function runAnimations() {
+            runCounters();
+            runProgressBars();
+        }
+
+        // 6. Simulate Data Refresh (Randomizes numbers)
+        function refreshData() {
+            // Rotate the button
+            const btn = document.getElementById('btn-refresh');
+            btn.style.transform = "rotate(360deg)";
+            setTimeout(() => btn.style.transform = "rotate(0deg)", 500);
+
+            // Randomize Target Numbers
+            const steps = document.querySelector('.card.blue .counter');
+            const cals = document.querySelectorAll('.card .counter')[1];
+            const active = document.querySelectorAll('.card .counter')[2];
+
+            steps.setAttribute('data-target', Math.floor(Math.random() * 5000) + 8000); // 8000-13000
+            cals.setAttribute('data-target', Math.floor(Math.random() * 500) + 400);   // 400-900
+            active.setAttribute('data-target', Math.floor(Math.random() * 60) + 30);    // 30-90
+
+            // Randomize Progress Bars
+            const p1 = Math.floor(Math.random() * 40) + 50; // 50-90%
+            const p2 = Math.floor(Math.random() * 40) + 50;
+            const p3 = Math.floor(Math.random() * 40) + 50;
+
+            document.getElementById('fill-steps').setAttribute('data-width', p1 + '%');
+            document.getElementById('label-steps').innerText = p1 + '%';
+            
+            document.getElementById('fill-cals').setAttribute('data-width', p2 + '%');
+            document.getElementById('label-cals').innerText = p2 + '%';
+            
+            document.getElementById('fill-ex').setAttribute('data-width', p3 + '%');
+            document.getElementById('label-ex').innerText = p3 + '%';
+
+            // Re-run animations
+            runAnimations();
+            
+            // Randomly change chart shape slightly
+            const chart = document.getElementById('main-chart');
+            const r1 = Math.floor(Math.random() * 30) + 20;
+            const r2 = Math.floor(Math.random() * 30) + 20;
+            chart.style.clipPath = `polygon(0 ${r1}%, 15% 20%, 30% 60%, 45% 30%, 60% 50%, 75% 20%, 90% ${r2}%, 100% 10%, 100% 100%, 0 100%)`;
+        }
+    </script>
+    <a href="/menu" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.1); padding: 10px 15px; border-radius: 8px; text-decoration: none; color: inherit; font-weight: bold; font-family: sans-serif; z-index: 1000; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px; transition: 0.2s;">
+    <i class="fas fa-arrow-left"></i> Back
+</a>
+</body>
+</html>

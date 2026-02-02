@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* (Keep your existing CSS styles here - they are fine) */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(135deg, #022c22 0%, #14532d 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
+        body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 50%); pointer-events: none; }
+        h1 { font-size: 2.5rem; margin-bottom: 40px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); letter-spacing: 1px; text-align: center; }
+        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; width: 100%; max-width: 900px; z-index: 1; }
+        .menu-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px; padding: 35px; text-align: center; text-decoration: none; color: white; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 220px; position: relative; overflow: hidden; }
+        .menu-card:hover { transform: translateY(-10px) scale(1.02); background: rgba(255, 255, 255, 0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-color: rgba(255, 255, 255, 0.5); }
+        .menu-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); opacity: 0; transform: scale(0.5); transition: 0.5s; }
+        .menu-card:hover::after { opacity: 1; transform: scale(1); }
+        .icon-box { font-size: 3rem; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: 0.4s; }
+        .menu-card:hover .icon-box { transform: scale(1.2) rotate(5deg); }
+        h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; position: relative; z-index: 2; }
+        p { font-size: 0.9rem; opacity: 0.8; font-weight: 400; position: relative; z-index: 2; }
+        .txt-dash { color: #4ade80; } .txt-track { color: #22d3ee; } .txt-rep { color: #a78bfa; } .txt-ana { color: #f87171; }
+        @media (max-width: 768px) { .grid-container { grid-template-columns: 1fr; } h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+
+    <h1>HeLLo Fitness Maker 👋</h1>
+
+    <div class="grid-container">
+        
+        <a href="/dashboard1" class="menu-card">
+            <div class="icon-box txt-dash"><i class="fas fa-running"></i></div>
+            <h3>Fitness Dashboard 🏃‍♂️</h3>
+            <p>Monitor your daily progress</p>
+        </a>
+
+        <a href="/dashboard2" class="menu-card">
+            <div class="icon-box txt-track"><i class="fas fa-bolt"></i></div>
+            <h3>Tracking Mode ⚡</h3>
+            <p>High contrast live view</p>
+        </a>
+
+        <a href="/dashboard3" class="menu-card">
+            <div class="icon-box txt-rep"><i class="fas fa-clipboard-list"></i></div>
+            <h3>Report 📝</h3>
+            <p>Detailed activity logs</p>
+        </a>
+
+        <a href="/dashboard4" class="menu-card">
+            <div class="icon-box txt-ana"><i class="fas fa-chart-pie"></i></div>
+            <h3>Fitness Analytics 📈</h3>
+            <p>Data visualization & goals</p>
+        </a>
+
+    </div>
+
+</body>
+</html>

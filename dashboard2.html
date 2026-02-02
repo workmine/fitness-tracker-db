@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Neon Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CSS STYLES --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; transition: all 0.3s ease; }
+        body { background-color: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .dashboard-container {
+            width: 100%; max-width: 750px; height: 500px;
+            background: #0f172a; border-radius: 20px;
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.1); /* Subtle neon glow behind container */
+            padding: 30px; display: flex; flex-direction: column; color: white;
+            border: 1px solid #1e293b;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h2 { font-size: 1.4rem; font-weight: 600; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #94a3b8; cursor: pointer; }
+        .user-info img:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+
+        /* Rings Row */
+        .rings-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 30px; }
+        .ring-card { 
+            background: #1e293b; flex: 1; padding: 15px; border-radius: 16px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        
+        /* The Ring itself */
+        .ring { 
+            width: 80px; height: 80px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            position: relative; margin-bottom: 10px; 
+            /* Default background before JS loads */
+            background: #334155; 
+        }
+        
+        /* The inner circle to create the donut shape */
+        .ring::before { 
+            content: ''; position: absolute; width: 66px; height: 66px; 
+            background: #1e293b; border-radius: 50%; z-index: 1; 
+        }
+        
+        /* The Text inside the ring */
+        .ring span { position: relative; font-size: 1.1rem; font-weight: bold; z-index: 2; }
+        .ring-label { font-size: 0.8rem; color: #94a3b8; }
+
+        /* Bottom Row */
+        .bottom-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; flex: 1; }
+        .stat-box { background: #1e293b; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        
+        /* Interactive Icons */
+        .icon-row { display: flex; justify-content: space-around; align-items: center; height: 100%; font-size: 1.5rem; }
+        .icon-item { 
+            display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; padding: 10px; border-radius: 10px; 
+        }
+        .icon-item:hover { background: rgba(255,255,255,0.05); }
+        /* Specific glow colors on hover */
+        .icon-item:nth-child(1):hover i { text-shadow: 0 0 15px #f43f5e; transform: scale(1.2); }
+        .icon-item:nth-child(2):hover i { text-shadow: 0 0 15px #3b82f6; transform: scale(1.2); }
+        .icon-item:nth-child(3):hover i { text-shadow: 0 0 15px #10b981; transform: scale(1.2); }
+        .icon-item:nth-child(4):hover i { text-shadow: 0 0 15px #f59e0b; transform: scale(1.2); }
+
+        .icon-item span { font-size: 0.7rem; color: #64748b; }
+
+        /* Equalizer Graph */
+        .dots-graph { display: flex; justify-content: space-between; align-items: flex-end; height: 100%; padding-top: 20px; }
+        .dot-col { width: 12px; background: #334155; border-radius: 6px; height: 100%; position: relative; overflow: hidden; }
+        .dot-fill { 
+            position: absolute; bottom: 0; width: 100%; border-radius: 6px; 
+            background: #06b6d4; height: 0%; /* Start at 0 for animation */
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px #06b6d4; /* Neon Glow */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <div>
+                <h2 id="welcome-msg">Fitness Dashboard</h2>
+                <div style="font-size:0.9rem; color:#64748b; margin-top:5px;">Live Tracking System</div>
+            </div>
+            <div class="user-info" onclick="refreshDashboard()" title="Click to Refresh Data">
+                <span style="margin-right:10px;">Refresh</span>
+                <img id="avatar" src="https://ui-avatars.com/api/?name=Alex&background=random" style="width:40px; border-radius:50%; border: 2px solid #06b6d4;">
+            </div>
+        </div>
+
+        <div class="rings-row">
+            <div class="ring-card">
+                <div class="ring" id="ring-steps" data-color="#06b6d4" data-percent="75">
+                    <span class="counter" data-target="{{ steps }}">0</span>
+                </div>
+                <div class="ring-label">Steps</div>
+            </div>
+            
+            <div class="ring-card">
+                <div class="ring" id="ring-cals" data-color="#f97316" data-percent="60">
+                    <span class="counter" data-target="{{ cals }}">0</span>
+                </div>
+                <div class="ring-label">Calories</div>
+            </div>
+            
+            <div class="ring-card">
+                <div class="ring" id="ring-bpm" data-color="#ec4899" data-percent="85">
+                    <span class="counter" data-target="{{ bpm }}">0</span>
+                </div>
+                <div class="ring-label">Heart Rate</div>
+            </div>
+            
+            <div class="ring-card">
+                <div class="ring" id="ring-sleep" data-color="#3b82f6" data-percent="50">
+                    <span class="counter" style="font-size:0.9rem">7h 45m</span> </div>
+                <div class="ring-label">Sleep</div>
+            </div>
+        </div>
+
+        <div class="bottom-row">
+            <div class="stat-box">
+                <h4 style="font-size:0.9rem; color:#94a3b8; margin-bottom:10px;">Weekly Activities</h4>
+                <div class="icon-row">
+                    <div class="icon-item"><i class="fas fa-running" style="color:#f43f5e"></i><span>Cardio</span></div>
+                    <div class="icon-item"><i class="fas fa-dumbbell" style="color:#3b82f6"></i><span>Strength</span></div>
+                    <div class="icon-item"><i class="fas fa-child" style="color:#10b981"></i><span>Yoga</span></div>
+                    <div class="icon-item"><i class="fas fa-fire" style="color:#f59e0b"></i><span>HIIT</span></div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <h4 style="font-size:0.9rem; color:#94a3b8; margin-bottom:10px;">Live Body Metrics</h4>
+                <div class="dots-graph">
+                    <div class="dot-col"><div class="dot-fill" style="height:40%"></div></div>
+                    <div class="dot-col"><div class="dot-fill" style="height:70%"></div></div>
+                    <div class="dot-col"><div class="dot-fill" style="height:30%"></div></div>
+                    <div class="dot-col"><div class="dot-fill" style="height:90%"></div></div>
+                    <div class="dot-col"><div class="dot-fill" style="height:50%"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+        });
+
+        function initDashboard() {
+            animateRings();
+            animateCounters();
+            startEqualizer();
+        }
+
+        // 1. Animate Neon Rings (Conic Gradient)
+        function animateRings() {
+            const rings = document.querySelectorAll('.ring');
+            
+            rings.forEach(ring => {
+                const color = ring.getAttribute('data-color');
+                const percent = +ring.getAttribute('data-percent');
+                let currentPercent = 0;
+                
+                // Reset to 0
+                ring.style.background = `conic-gradient(#334155 0%, #334155 100%)`;
+
+                // Animate Loop
+                const interval = setInterval(() => {
+                    if (currentPercent >= percent) {
+                        clearInterval(interval);
+                    } else {
+                        currentPercent++;
+                        // Creating the gradient string: Color from 0 to Current%, Dark Grey rest
+                        ring.style.background = `conic-gradient(${color} ${currentPercent}%, #334155 0)`;
+                    }
+                }, 20); // Speed of rotation
+            });
+        }
+
+        // 2. Animate Numbers
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                // If it's the sleep text, skip numerical animation
+                if(counter.innerText.includes('h')) return;
+
+                const target = +counter.getAttribute('data-target');
+                const increment = Math.ceil(target / 40); 
+                
+                counter.innerText = '0';
+                
+                const updateCount = () => {
+                    const count = +counter.innerText;
+                    if (count < target) {
+                        counter.innerText = count + increment;
+                        setTimeout(updateCount, 25);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCount();
+            });
+        }
+
+        // 3. "Live" Equalizer Animation
+        // This function changes the height of the bars randomly every 800ms
+        function startEqualizer() {
+            const bars = document.querySelectorAll('.dot-fill');
+            
+            setInterval(() => {
+                bars.forEach(bar => {
+                    // Generate random height between 20% and 95%
+                    const h = Math.floor(Math.random() * 75) + 20;
+                    bar.style.height = `${h}%`;
+                });
+            }, 800);
+        }
+
+        // 4. Refresh / Reset Function
+        function refreshDashboard() {
+            // Spin Avatar
+            const avatar = document.getElementById('avatar');
+            avatar.style.transform = "rotate(360deg)";
+            setTimeout(() => avatar.style.transform = "rotate(0deg)", 500);
+
+            // Randomize Data for Rings
+            const rings = document.querySelectorAll('.ring');
+            rings.forEach(ring => {
+                // Randomize percent between 30 and 95
+                const newPercent = Math.floor(Math.random() * 65) + 30;
+                ring.setAttribute('data-percent', newPercent);
+                
+                // Randomize counters (if numeric)
+                const counter = ring.querySelector('.counter');
+                if(!counter.innerText.includes('h')) {
+                    const oldTarget = +counter.getAttribute('data-target');
+                    // Vary slightly
+                    const newTarget = Math.floor(oldTarget * (0.8 + Math.random() * 0.4)); 
+                    counter.setAttribute('data-target', newTarget);
+                }
+            });
+
+            // Re-trigger animations
+            animateRings();
+            animateCounters();
+        }
+    </script>
+    <a href="/menu" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 8px; text-decoration: none; color: white; font-weight: bold; font-family: sans-serif; z-index: 1000; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);">
+    <i class="fas fa-arrow-left"></i> Back
+</a>
+</body>
+</html>
